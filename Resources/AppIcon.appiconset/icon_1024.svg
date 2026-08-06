@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#28302a"></stop><stop offset="0.55" stop-color="#1a201c"></stop><stop offset="1" stop-color="#0f1310"></stop></linearGradient>
+ <radialGradient id="spill" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#f5ae3a" stop-opacity="0.55"></stop><stop offset="1" stop-color="#f5ae3a" stop-opacity="0"></stop></radialGradient>
+ <linearGradient id="bulb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd07a"></stop><stop offset="1" stop-color="#f5ae3a"></stop></linearGradient>
+ <clipPath id="c"><rect x="100" y="100" width="824" height="824" rx="184"></rect></clipPath>
+</defs>
+<rect x="100" y="100" width="824" height="824" rx="184" fill="url(#gd)"></rect>
+<g clip-path="url(#c)">
+ <rect x="172" y="236" width="680" height="556" rx="70" fill="#0c0f0d"></rect><rect x="176" y="240" width="672" height="548" rx="66" fill="none" stroke="#e6e1d3" stroke-opacity="0.16" stroke-width="6"></rect>
+ <line x1="275.6" y1="575.3" x2="315.0" y2="606.1" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="10" stroke-linecap="round"></line><line x1="323.2" y1="526.9" x2="340.8" y2="548.6" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"></line><line x1="380.5" y1="490.4" x2="392.8" y2="515.5" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"></line><line x1="444.5" y1="467.7" x2="450.8" y2="495.0" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"></line><line x1="512.0" y1="460.0" x2="512.0" y2="510.0" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="10" stroke-linecap="round"></line><line x1="579.5" y1="467.7" x2="573.2" y2="495.0" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"></line><line x1="643.5" y1="490.4" x2="631.2" y2="515.5" stroke="#e6e1d3" stroke-opacity="0.3" stroke-width="6" stroke-linecap="round"></line><line x1="700.8" y1="526.9" x2="683.2" y2="548.6" stroke="#e6e1d3" stroke-opacity="0.5" stroke-width="6" stroke-linecap="round"></line><line x1="748.4" y1="575.3" x2="709.0" y2="606.1" stroke="#e6e1d3" stroke-opacity="0.5" stroke-width="10" stroke-linecap="round"></line>
+ <line x1="512" y1="760" x2="261.4" y2="564.2" stroke="#e6e1d3" stroke-width="26" stroke-linecap="round"></line>
+ <circle cx="512" cy="760" r="120" fill="url(#spill)"></circle>
+ <circle cx="512" cy="760" r="46" fill="url(#bulb)"></circle>
+</g>
+<rect x="104" y="104" width="816" height="816" rx="180" fill="none" stroke="#e6e1d3" stroke-opacity="0.10" stroke-width="8"></rect></svg>

@@ -1,0 +1,9 @@
+# Build products
+build/
+.build/
+*.icns
+
+# Design sync state. Holds a private Claude Design project id, so it stays local.
+.design-sync/
+
+.DS_Store
