@@ -53,12 +53,39 @@ Objective Development, who make Little Snitch, confirm the same limitation for
 [Micro Snitch](https://www.obdev.at/support/microsnitch/vajq8). Any app name here would be a
 guess, so the log deliberately omits it.
 
+## Install
+
+Grab the zip from [Releases](https://github.com/Nah-Nova/dead-air/releases), unzip, and put
+`DeadAir.app` in `/Applications`. Universal, Apple Silicon and Intel, macOS 15 or later.
+
+**You must clear quarantine, or it will not open.** There is no Developer ID certificate
+behind this, so the app is signed ad-hoc and not notarised, and macOS refuses a downloaded
+bundle in that state:
+
+```sh
+xattr -dr com.apple.quarantine /Applications/DeadAir.app
+```
+
+If you would rather not run that, open System Settings > Privacy & Security after the first
+failed launch and press **Open Anyway**. Right-click then Open no longer works for an
+unnotarised app on current macOS.
+
+Verify what you downloaded before you trust it, the checksum is in the release notes:
+
+```sh
+shasum -a 256 DeadAir-1.0-universal.zip
+```
+
 ## Build
 
 ```sh
 ./build.sh --install     # build, sign, copy to ~/Applications, launch
 ./build.sh               # build only, lands in build/DeadAir.app
+./build.sh --release     # universal binary plus a zip, for a release
 ```
+
+The release build compiles twice and merges with `lipo`, because SPM's own `--arch` needs
+`xcbuild`, which only ships with full Xcode.
 
 Then grant Accessibility, which only cleaning mode needs: System Settings > Privacy &
 Security > Accessibility. The app has a **Grant Accessibility access…** item in its own menu

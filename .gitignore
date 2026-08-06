@@ -7,3 +7,6 @@ build/
 .design-sync/
 
 .DS_Store
+
+# Second-architecture scratch dir for the universal release build
+.build-x86/
