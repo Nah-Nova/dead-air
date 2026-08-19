@@ -100,6 +100,30 @@ approval to one exact binary, so a new version no longer matches and macOS keeps
 entry while refusing the new app. Cleaning mode detects that and offers **Clear and ask
 again**, which drops the stale approval and re-asks in one step.
 
+## Using it
+
+Every module you switch on gets its own item in the menu bar. Clicking one opens that
+module's popup, and the gear in a popup header opens the settings window for it.
+
+The settings window is where the app is configured. Its sidebar lists Dashboard first and
+then every module:
+
+- **Dashboard** reports what the machine is: model, chip, core counts, memory, disks.
+- **Each module row** has a switch. Turn a module off and its menu bar item disappears.
+- **Selecting a module** opens its tabs. Widgets picks which readout appears in the bar, a
+  chart, a value, a label or a mark, and each widget carries its own colour and options.
+  Popup configures the detail view, and Notifications sets thresholds where the module has
+  them.
+- **Dead Air** is a module like the others. Its widget is the state mark, and its popup holds
+  the mic, cleaning, keep awake and activity cards.
+
+Reopening the app from Finder or Spotlight brings the settings window back if you closed it.
+Pausing the app from the settings window hides every widget and leaves a single item in the
+bar to click.
+
+Desktop widgets are separate: add them from the desktop widget gallery, where they appear
+under Dead Air. They need macOS 14.
+
 ## Hotkeys
 
 | Action | Shortcut |
@@ -148,6 +172,22 @@ It confirms first, because it behaves differently from everything else here: it 
 entirely rather than only the lid, so the Mac stays awake on battery and can get hot in a bag,
 and it survives reboots until you switch it off again.
 
+## Uninstall
+
+Dragging the app to the bin leaves the preferences, the cached history and, if fan control was
+ever used, a privileged helper behind. The app ships a script that removes all of it:
+
+```sh
+"/Applications/Dead Air.app/Contents/Resources/Scripts/uninstall.sh"
+```
+
+It quits the app, removes the helper and its launch daemon (asking for your password, since
+that part is root owned), deletes the app, its preferences, its containers and its saved
+history, and drops the Accessibility approval so no orphan entry is left in Privacy &
+Security. Read it before you run it, it is 53 lines.
+
+If fan speeds were ever set manually, they return to automatic control after a reboot.
+
 ## Build
 
 Building needs full Xcode, not just the Command Line Tools. Every target signs ad-hoc by
@@ -169,6 +209,23 @@ The Makefile wraps the same steps, installing to `~/Applications` instead:
 `make build sign install`. Tests run with
 `xcodebuild test -project DeadAir.xcodeproj -scheme "Dead Air" -destination 'platform=macOS'`.
 
+## Layout
+
+| Path | Role |
+| --- | --- |
+| `DeadAir/` | The app target: delegate, settings window, dashboard, update and setup views |
+| `Kit/` | The shared framework: `Brand.swift` is the token layer, plus widgets, charts and popups |
+| `Modules/` | One directory per module, nine monitors plus `DeadAir/` for the studio features |
+| `Widgets/` | The WidgetKit extension for desktop widgets |
+| `SMC/` | The `smc` tool and the privileged helper used for fan control |
+| `Tests/` | Unit tests for Kit and the RAM reader |
+| `BRAND.md` | The identity, and the source of truth over the code |
+| `docs/design/` | Vector sources for the app icon and the three menu bar marks |
+
+A module is a directory with a `config.plist` naming it, its mark and its available widgets,
+plus a `Module` subclass. `Modules/DeadAir` is the smallest complete example that is not a
+system reader.
+
 ## Design
 
 The identity is documented in [BRAND.md](BRAND.md): the palette with enforced roles, three
@@ -181,7 +238,20 @@ accent and the dead state, teal only ever means live.
 
 ## Licence
 
-MIT, see [LICENSE](LICENSE).
+MIT. The full text is in [LICENSE](LICENSE), which carries both copyright notices:
 
-Built on the [Stats](https://github.com/exelban/stats) system monitor by Serhiy Mytrovtsiy,
-MIT licensed, with the original licence preserved in [LICENSE-stats](LICENSE-stats).
+```
+Copyright (c) 2026 Noa Heutz
+Copyright (c) 2019 Serhiy Mytrovtsiy
+```
+
+The second notice is there because this app is built on the
+[Stats](https://github.com/exelban/stats) system monitor by Serhiy Mytrovtsiy. Stats is MIT
+licensed under identical terms, so one licence file covering both is all the licence asks
+for, and the per-file copyright headers in the source are intact.
+
+What came from Stats: the nine monitor modules, the Kit framework underneath them, the widget
+and popup machinery, and the SMC tooling. What did not: the studio features, the identity and
+every surface it touches, and the removal of the donation, telemetry and remote monitoring
+that the original shipped. If you want the original, unmodified and better maintained for
+monitoring alone, get [Stats](https://github.com/exelban/stats).
