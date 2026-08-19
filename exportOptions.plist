@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  Export options for `xcodebuild -exportArchive`. Not used by the default
+  Makefile flow, which builds unsigned and signs ad-hoc. A release export
+  with method "developer-id" requires a paid Developer ID certificate and
+  a teamID entry; this repo ships without one.
+-->
+<dict>
+    <key>method</key>
+    <string>mac-application</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+</dict>
+</plist>

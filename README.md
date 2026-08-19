@@ -2,18 +2,18 @@
 
 # Dead Air
 
-A macOS menu bar app that mutes the mic, locks the keyboard for cleaning, tells you when the
-camera is on, and keeps the Mac awake.
+A macOS menu bar app that combines studio controls with a full system monitor. The studio
+side mutes the mic system-wide, locks the keyboard for cleaning, reports when the camera or
+mic is in use, and keeps the Mac awake. The monitor side covers CPU, GPU, RAM, disk, network,
+battery, sensors, bluetooth and a clock, each as its own menu bar widget with a detail popup.
 
 Dead air is the broadcast term for silence that was not supposed to happen. This makes it
 deliberate.
 
-Native Swift and AppKit, no dependencies, builds with Command Line Tools alone. No Xcode.
-
 <img src="docs/menu-bar-marks.png" width="440" alt="The three menu bar marks: a waveform for live, a flat line for muted, a keycap for locked">
 
-One 64 unit grid, one stroke weight. Only the interior line changes, so live, muted and locked
-read as one object doing different things.
+One 64 unit grid, one stroke weight. Only the interior line changes, so live, muted and
+locked read as one object doing different things.
 
 ## What it does
 
@@ -24,23 +24,26 @@ going live. Push to talk temporarily unmutes while you hold a hotkey.
 
 **Cleaning mode.** Blocks the keyboard system-wide with a `CGEventTap`, including media,
 volume and brightness keys. Optionally the trackpad too. Holds a power assertion so the
-display cannot sleep and lock mid-wipe, and covers the screen in black so smudges show up.
+display cannot sleep and lock mid-wipe, and covers every screen in black so smudges show up.
 
 <img src="docs/cleaning-overlay.png" width="620" alt="The cleaning overlay: an OFF AIR tally lamp, INPUT LOCKED in condensed capitals, and a mono countdown">
 
 **Camera and mic monitor.** Reports whether the camera or mic is in use, the same signal
-behind the green and orange menu bar dots, with a timestamped log and an optional banner.
+behind the green and orange menu bar dots, with a timestamped log, an optional banner, and an
+eight hour timeline of how much each has actually been running.
 
 <img src="docs/camera-banner.png" width="420" alt="A panel banner with an amber tally lamp reading Camera is on">
 
-**Keep awake.** IOKit power assertions with presets from 15 minutes to indefinite and a live
-countdown. Optionally lets the display sleep while the system stays awake. A separate toggle
-keeps the Mac awake with the lid closed.
+**Keep awake.** IOKit power assertions with presets from 15 minutes to indefinite, a live
+countdown and a meter for the remaining time. Optionally lets the display sleep while the
+system stays awake. A separate toggle keeps the Mac awake with the lid closed.
+
+**System monitor.** The nine monitor modules from [Stats](https://github.com/exelban/stats),
+each with its own menu bar widget, popup and settings, restyled to this app's identity.
 
 ## What it cannot do
 
-Both of these are limits of macOS, not of the implementation, and the app says so in its own
-About box rather than pretending otherwise.
+All three are limits of macOS, not of the implementation.
 
 **It cannot disable the camera.** There is no API. Apple's developer support
 [says so directly](https://developer.apple.com/forums/thread/678268). Real blocking needs a
@@ -53,17 +56,23 @@ Objective Development, who make Little Snitch, confirm the same limitation for
 [Micro Snitch](https://www.obdev.at/support/microsnitch/vajq8). Any app name here would be a
 guess, so the log deliberately omits it.
 
+**It has no input level meter.** Metering a microphone means opening it, which needs
+microphone permission and lights the orange indicator. An app whose point is that it needs no
+permission to watch the mic cannot have one, so the panel charts how long the mic was in use
+instead of how loud it was.
+
 ## Install
 
 Grab the zip from [Releases](https://github.com/Nah-Nova/dead-air/releases), unzip, and put
-`DeadAir.app` in `/Applications`. Universal, Apple Silicon and Intel, macOS 15 or later.
+`Dead Air.app` in `/Applications`. Universal, Apple Silicon and Intel, macOS 12 or later.
+The desktop widgets need macOS 14.
 
 **You must clear quarantine, or it will not open.** There is no Developer ID certificate
 behind this, so the app is signed ad-hoc and not notarised, and macOS refuses a downloaded
 bundle in that state:
 
 ```sh
-xattr -dr com.apple.quarantine /Applications/DeadAir.app
+xattr -dr com.apple.quarantine "/Applications/Dead Air.app"
 ```
 
 If you would rather not run that, open System Settings > Privacy & Security after the first
@@ -73,52 +82,19 @@ unnotarised app on current macOS.
 Verify what you downloaded before you trust it, the checksum is in the release notes:
 
 ```sh
-shasum -a 256 DeadAir-1.0-universal.zip
+shasum -a 256 "Dead Air-2.0.0-universal.zip"
 ```
 
-## Build
+## Permissions
 
-```sh
-./build.sh --install     # build, sign, copy to ~/Applications, launch
-./build.sh               # build only, lands in build/DeadAir.app
-./build.sh --release     # universal binary plus a zip, for a release
-```
+The only permission the app asks for is Accessibility, and only cleaning mode needs it:
+System Settings > Privacy & Security > Accessibility. Muting the mic, monitoring the sensors
+and every system readout need nothing at all.
 
-The release build compiles twice and merges with `lipo`, because SPM's own `--arch` needs
-`xcbuild`, which only ships with full Xcode.
-
-Then grant Accessibility, which only cleaning mode needs: System Settings > Privacy &
-Security > Accessibility. The app has a **Grant Accessibility access…** item in its own menu
-while the permission is missing, which is the reliable way to trigger the prompt.
-
-Muting the mic and monitoring the sensors need no permissions at all.
-
-### Two things that will waste your afternoon
-
-Both of these cost real time here, so they are written down.
-
-**Ad-hoc signing and TCC.** There is no Developer ID certificate, so the app is signed
-ad-hoc and its code identity changes when the binary does. macOS can leave a stale
-Accessibility entry that still shows as enabled while the app itself is not trusted, so it
-keeps asking. Clear it and grant once:
-
-```sh
-tccutil reset Accessibility nu.soep.deadair
-```
-
-**Never test permissions from a terminal.** Launch the binary from a shell and macOS
-attributes the request to the *terminal*, not to the app. If your terminal already has
-Accessibility, the app inherits it and every check lies to you:
-
-```
-open -a ~/Applications/DeadAir.app --env DEADAIR_SELFTEST=1 --stdout /tmp/ax.txt
-  → accessibility granted: false      # the truth, launchd is responsible
-
-./build/DeadAir.app/Contents/MacOS/DeadAir
-  → accessibility granted: true       # the terminal's permission leaking in
-```
-
-Use `open --env` for anything permission-related.
+**Accessibility has to be granted again after every update.** Ad-hoc signing ties the
+approval to one exact binary, so a new version no longer matches and macOS keeps the old
+entry while refusing the new app. Cleaning mode detects that and offers **Clear and ask
+again**, which drops the stale approval and re-asks in one step.
 
 ## Hotkeys
 
@@ -128,8 +104,8 @@ Use `open --env` for anything permission-related.
 | Push to talk (hold) | `⌃⌥Space` |
 | Toggle cleaning mode | `⌃⌥⌘K` |
 
-Registration fails silently if another app already owns a combination, and **About Dead Air**
-lists any that failed. Override with Carbon key codes:
+Registration fails silently if another app already owns a combination. Override with Carbon
+key codes:
 
 ```sh
 defaults write nu.soep.deadair "hotkey.toggleMic.keyCode" -int 46
@@ -145,13 +121,17 @@ Four ways, in order of reliability:
 1. **The auto-unlock timer.** 30s, 1m, 5m or none.
 2. **Hold both ⌘ keys for 3 seconds.** Read from HID state, so it works even though the tap
    is swallowing the keystrokes.
-3. **The Unlock button**, when the trackpad is not locked. Hidden when it is, since the tap
-   eats the click too.
+3. **The Unlock button** on the overlay, when the trackpad is not locked. Hidden when it is,
+   since the tap eats the click too.
 4. **Kill the process.** The tap dies with it, so a crash can never lock you out.
 
 Two hard rules: locking the trackpad forces a timeout of at most 5 minutes even if you picked
 "no timeout", so the Mac can never be left with no working input. And the power button is
-never blocked, macOS reserves it.
+never blocked, since the tap passes that one event through on purpose.
+
+The timeout and the chord are enforced twice: once on the run loop that draws the countdown,
+and once from a background watchdog, so a modal dialog appearing while input is locked cannot
+stall the way out.
 
 ## Keeping the Mac awake with the lid closed
 
@@ -164,48 +144,40 @@ It confirms first, because it behaves differently from everything else here: it 
 entirely rather than only the lid, so the Mac stays awake on battery and can get hot in a bag,
 and it survives reboots until you switch it off again.
 
-## Smoke test
+## Build
 
-Builds every menu, exercises the permission-free toggles, and renders every custom view to
-PNG, so a layout mistake shows up without clicking through the UI:
+Building needs full Xcode, not just the Command Line Tools. Every target signs ad-hoc by
+default, so this works without a Developer ID certificate.
 
 ```sh
-DEADAIR_SELFTEST=1 DEADAIR_UI_DUMP=/tmp/da-ui DEADAIR_ICON_DUMP=/tmp/da-icons \
-  ./build/DeadAir.app/Contents/MacOS/DeadAir
+xcodebuild -project DeadAir.xcodeproj -scheme "Dead Air" -configuration Release \
+  -derivedDataPath build/DerivedData build
 ```
 
-The renders in this README come out of that hook. It has already caught a legend rendering
-flush left and a view being released before it was drawn.
+Then sign the result ad-hoc and copy it to `/Applications`:
+
+```sh
+codesign --force --deep -s - "build/DerivedData/Build/Products/Release/Dead Air.app"
+cp -R "build/DerivedData/Build/Products/Release/Dead Air.app" /Applications/
+```
+
+The Makefile wraps the same steps, installing to `~/Applications` instead:
+`make build sign install`. Tests run with
+`xcodebuild test -project DeadAir.xcodeproj -scheme "Dead Air" -destination 'platform=macOS'`.
 
 ## Design
 
-The identity is documented in [BRAND.md](BRAND.md): palette with enforced roles, three type
-roles, the mark geometry for all three states, alternates that were rejected and why, and the
-macOS icon constraints. `Sources/DeadAir/Brand.swift` is the implementation of it.
+The identity is documented in [BRAND.md](BRAND.md): the palette with enforced roles, three
+type roles, the geometry of every mark, the bento surfaces the popups are built from, and the
+alternates that were rejected and why. `Kit/Brand.swift` is the implementation, and it is the
+only place a colour or a font is defined.
 
 Three colour rules the code is held to: amber is a lamp and never sets type, oxide is the
 accent and the dead state, teal only ever means live.
 
-<img src="docs/menu-rows.png" width="380" alt="Two menu readouts: Camera with a lit amber lamp reading IN USE, and Mic stream reading IDLE">
-
-## Layout
-
-| File | Role |
-| --- | --- |
-| `AppDelegate.swift` | Menu bar item, menu construction, actions, render hooks |
-| `Brand.swift` | Colour tokens and type roles, the single source of truth |
-| `MicController.swift` | CoreAudio mute, volume fallback, device-change listeners |
-| `InputLocker.swift` | Event tap, unlock chord, timeout, safety cap |
-| `CleaningOverlay.swift` | Black full-screen cover with countdown |
-| `SensorMonitor.swift` | CMIO and CoreAudio in-use polling |
-| `ActivationLog.swift` | Persisted activation history |
-| `AlertBanner.swift` | Floating warning panel |
-| `KeepAwake.swift` | Power assertions and presets |
-| `LidSleep.swift` | The one authorised `pmset` call |
-| `HotkeyManager.swift` | Carbon global hotkeys with press and release |
-| `StatusIcon.swift` | The three marks, drawn as template vectors |
-| `MenuLampRow.swift` | The custom tally readout row |
-
 ## Licence
 
 MIT, see [LICENSE](LICENSE).
+
+Built on the [Stats](https://github.com/exelban/stats) system monitor by Serhiy Mytrovtsiy,
+MIT licensed, with the original licence preserved in [LICENSE-stats](LICENSE-stats).

@@ -2,6 +2,11 @@
 build/
 .build/
 *.icns
+DerivedData/
+xcuserdata
+Dead Air.app
+SMC/smc
+dSYMs.zip
 
 # Design sync state. Holds a private Claude Design project id, so it stays local.
 .design-sync/

@@ -3,8 +3,8 @@
 The canonical source for the identity. Edit this first, then push changes to the design
 system project.
 
-The colour tokens and type roles below are implemented in `Sources/DeadAir/Brand.swift`, and
-the mark in `Sources/DeadAir/StatusIcon.swift`. If the code and this file ever disagree, this
+The colour tokens, type roles and every mark below are implemented in `Kit/Brand.swift`, the
+one token layer the whole app links against. If the code and this file ever disagree, this
 file wins and the code is the bug.
 
 ## The idea
@@ -68,28 +68,31 @@ Three roles, no fourth.
 
 ## The mark
 
-One 64 unit grid, one 5 unit stroke, round caps. Only the interior line changes between
+One 64 unit grid, one 6 unit stroke, round caps. Only the interior line changes between
 states, so the three read as one object doing different things.
 
-| State | Drawing | Used for |
-| --- | --- | --- |
-| 01 Live | `polyline 4,32 14,32 19,15 24,49 29,32 60,32` | Mic is open |
-| 02 Muted | `polyline 4,32 60,32` | Dead air |
-| 03 Locked | Keycap rounded rect `x8 y14 w48 h36 r7` with `polyline 19,32 45,32` inside | Cleaning mode |
+| State | Mark | Drawing | Used for |
+| --- | --- | --- | --- |
+| 01 Live | `waveform` | `polyline 5,32 14,32 19,15 24,49 29,32 59,32` | Mic is open |
+| 02 Muted | `flatline` | `polyline 5,32 59,32` | Dead air |
+| 03 Locked | `keycap` | Keycap rounded rect `x8 y14 w48 h36 r7` with `polyline 19,32 45,32` inside | Cleaning mode |
 
 The flat line is the whole idea of the name, and it survives being 16 points tall. Design the
 state family first and the app icon second, because the small one is the one people see.
 
-**Shipped.** `StatusIcon.swift` draws all three as vectors, so they stay sharp at any size
-and need no `@2x` pair. The designed PNG templates are kept in `Resources/MenuBar` as the
-design source.
+**Shipped.** `Brand.drawMark` draws all three as vectors, so they stay sharp at any size and
+need no `@2x` pair. `MarkWidget` is the menu bar widget that swaps between them: locked
+outranks muted, because a locked keyboard is the more consequential state to be caught in.
 
-Two things the implementation had to settle that the drawing above does not say:
+Why those numbers, since an earlier draft of this table had others:
 
 - **Stroke is 6 units, not 5.** At an 18 pt render 5 units lands on 1.4 pt, under the 1.5 px
   floor a 1x menu bar needs. 6 gives 1.69 pt.
 - **The polylines run 5 to 59, not 4 to 60.** Round caps put ink 3 units past each endpoint,
-  so starting at 4 left one unit of margin where the two units below are required.
+  so starting at 4 left one unit of margin where two units are required.
+- **The menu bar mark is stroked in `legendPrimary`, not tinted as a template.** The widget
+  is a subview of the status item button, where template tinting never applies. It is the
+  one documented exception to the template rule below; the module marks are real templates.
 
 ### Alternates already explored, do not re-propose as the lead
 
@@ -97,6 +100,72 @@ Two things the implementation had to settle that the drawing above does not say:
   points. App icon only.
 - **Muted capsule**, a circle with a bar. Clean, but it is already every mute button on earth.
 - **Carrier gap**, an interrupted broadcast arc. Everyone reads it as a wifi problem.
+
+### The module marks
+
+Every module carries a mark drawn in the same hand as the state family: one 64 unit grid, one
+6 unit stroke, round caps, two units of padding, monochrome. Ten marks in one hand read as a
+set; ten borrowed system symbols read as somebody else's app. Modules name their mark with a
+`Mark` key in `config.plist`, and `Brand.moduleMark` draws it.
+
+| Mark | Module | Drawing |
+| --- | --- | --- |
+| `waveform` | Dead Air | The identity mark, the live state reused |
+| `chip` | CPU | Package `x12 y12 w40 h40 r8` with a die dot at the centre |
+| `display` | GPU | Screen `x10 y14 w44 h30 r6` on a foot `24,52 40,52` |
+| `stick` | RAM | Body `x9 y15 w46 h20 r5` standing on two contacts |
+| `platter` | Disk | Plate `oval x14 y14 w36 h36` with a spindle dot |
+| `traffic` | Network | An up arrow and a down arrow, the only thing the readout says |
+| `cell` | Battery | Body `x9 y22 w40 h20 r5` with a terminal at `54` |
+| `probe` | Sensors | A short stem carrying a heavy bulb `oval x22 y32 w20 h20` |
+| `link` | Bluetooth | The pairing rune, struck in the same weight |
+| `dial` | Clock | Face `oval x14 y14 w36 h36` with two hands, never numerals |
+
+Three of these were redrawn after being rendered at 16 points, which is the only test that
+counts:
+
+- **The chip was four centred pins around a body.** That is a crosshair, which the Do not
+  list rules out by name. A die inside its package says processor without the wrong genre.
+- **The memory module had three contacts.** At one stroke weight they merged into a comb.
+  Two contacts and a wider body survive.
+- **The probe had a small bulb on a long stem**, which reads as a map pin. Weighting it the
+  other way makes it a probe again.
+
+## Surfaces and the bento grid
+
+The popups are built from cards on a quiet ground, not from rows separated by scored lines.
+Three tokens carry it, and they are the only grounds besides the panel plate and the
+blackout.
+
+| Token | Role | Light | Dark |
+| --- | --- | --- | --- |
+| `groundApp` | The ground behind cards, and the popup's own paint | `#F4F5F1` | `#121513` |
+| `surface` | A card, reading as a raised plate | `#FFFFFF` | `#1C211E` |
+| `surfaceBorder` | A card's hairline rim, separating and never decorating | Studio dark @ 0.08 | Legend cream @ 0.08 |
+
+`BentoCard` is the one container: 10 unit corner radius, 10 unit inset, an optional control
+sitting at the right of its title row, and a vertical content stack. The grid rules are one
+card per concern, an 8 pt gutter, and a `.fillEqually` pair only where two readouts are small
+enough to share a line, which in practice means the camera and mic tiles.
+
+`LampStateView` is the readout primitive: a tally lamp and its mono state word drawn as one
+piece of hardware, so nothing can clip the lamp's glow. It is the only place a lamp and a
+state word are composed, and it exists because a lamp alone is never allowed to carry meaning.
+
+Two support tokens for type on these grounds, pitched for the worst realistic menu material
+rather than for a plate: `legendSecondary` (`#4E534E` light, `#ACAA9F` dark) for hints, device
+names and log lines, and `legendTertiary` (`#555955` light, `#9A9C93` dark) for the quietest
+row, which never carries state. `hairline` (`#C5C8C1` light, `#30342F` dark) is for a rule or
+a plate rim, decorative only.
+
+### Amber on type, and the one split it forces
+
+Because amber may never set type, any value whose colour is derived from a load or a pressure
+level needs two readings, and the code carries both: `usageColor` and `pressureColor` return
+the fill reading, where amber is legal, and `usageInk` and `pressureInk` return the type
+reading, which is neutral until the critical zone and then takes oxide. A number in the menu
+bar always uses the ink reading. If a new call site ever needs a third, it is a sign the
+warning state wants a token of its own rather than a borrowed lamp.
 
 ## macOS constraints
 

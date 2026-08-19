@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AlternativeSymbol</key>
+	<string>mic.slash</string>
+	<key>Mark</key>
+	<string>waveform</string>
+	<key>Name</key>
+	<string>Dead Air</string>
+	<key>Settings</key>
+	<dict>
+		<key>notifications</key>
+		<false/>
+		<key>popup</key>
+		<true/>
+	</dict>
+	<key>State</key>
+	<true/>
+	<key>Symbol</key>
+	<string>mic.slash.fill</string>
+	<key>Widgets</key>
+	<dict>
+		<key>label</key>
+		<dict>
+			<key>Default</key>
+			<false/>
+			<key>Order</key>
+			<integer>2</integer>
+			<key>Title</key>
+			<string>AIR</string>
+		</dict>
+		<key>mark</key>
+		<dict>
+			<key>Default</key>
+			<true/>
+			<key>Order</key>
+			<integer>0</integer>
+			<key>Preview</key>
+			<dict>
+				<key>Values</key>
+				<string></string>
+			</dict>
+		</dict>
+		<key>sensors</key>
+		<dict>
+			<key>Default</key>
+			<false/>
+			<key>Order</key>
+			<integer>1</integer>
+			<key>Preview</key>
+			<dict>
+				<key>Values</key>
+				<string>MIC,MUTED/CAM,OFF</string>
+			</dict>
+		</dict>
+	</dict>
+</dict>
+</plist>
