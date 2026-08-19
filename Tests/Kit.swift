@@ -40,6 +40,42 @@ class KitTests: XCTestCase {
         XCTAssertFalse(isNewestVersion(currentVersion: "", latestVersion: ""))
     }
     
+    func testPickReleaseAssets() throws {
+        // What a release actually publishes.
+        let real: [(name: String, url: String)] = [
+            ("DeadAir-2.0.1-universal.zip", "https://example.test/zip"),
+            ("DeadAir-2.0.1-universal.zip.sha256", "https://example.test/sum")
+        ]
+        let picked = pickReleaseAssets(real, appName: "Dead Air")
+        XCTAssertEqual(picked?.zip, "https://example.test/zip")
+        XCTAssertEqual(picked?.checksum, "https://example.test/sum")
+
+        // A release with no checksum still yields a download, and the caller decides.
+        let noSum = pickReleaseAssets([("DeadAir-3.0.0-universal.zip", "u")], appName: "Dead Air")
+        XCTAssertEqual(noSum?.zip, "u")
+        XCTAssertNil(noSum?.checksum)
+
+        // The old disk image is not a match, so an update is refused rather than mishandled.
+        XCTAssertNil(pickReleaseAssets([("Dead Air.dmg", "u")], appName: "Dead Air"))
+        XCTAssertNil(pickReleaseAssets([], appName: "Dead Air"))
+
+        // Another project's asset in the same release is not picked up.
+        XCTAssertNil(pickReleaseAssets([("SomethingElse-1.0.zip", "u")], appName: "Dead Air"))
+    }
+
+    func testParseChecksum() throws {
+        let hash = "01af55e3eb360105426f43b55c3fd43b76dfb32bc54896b137c1570fb9574dcd"
+        XCTAssertEqual(parseChecksum("\(hash)  DeadAir-2.0.1-universal.zip\n"), hash)
+        XCTAssertEqual(parseChecksum(hash), hash)
+        XCTAssertEqual(parseChecksum(hash.uppercased()), hash.uppercased())
+
+        // Anything that is not a SHA-256 is refused rather than compared against.
+        XCTAssertNil(parseChecksum(""))
+        XCTAssertNil(parseChecksum("not-a-hash  file.zip"))
+        XCTAssertNil(parseChecksum(String(hash.dropLast())))
+        XCTAssertNil(parseChecksum("zzzz\(hash.dropFirst(4))"))
+    }
+
     func testUnitsGetReadableSpeed_byte() throws {
         XCTAssertEqual(Units(bytes: 0).getReadableSpeed(base: .byte), "0 KB/s")
         XCTAssertEqual(Units(bytes: 999).getReadableSpeed(base: .byte), "0 KB/s")

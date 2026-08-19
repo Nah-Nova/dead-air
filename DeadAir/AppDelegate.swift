@@ -174,16 +174,22 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
                                 withCompletionHandler completionHandler: @escaping () -> Void) {
         self.clickInNotification = true
         
-        if let uri = response.notification.request.content.userInfo["url"] as? String {
+        if response.notification.request.content.userInfo["url"] is String {
             debug("Downloading new version of app...")
-            if let url = URL(string: uri) {
-                updater.download(url, completion: { path in
-                    updater.install(path: path) { error in
-                        if let error {
-                            showAlert("Error update Dead Air", error, .critical)
+            // Re-checked rather than acting on the payload, so the checksum comes from the
+            // same lookup as the download and a superseded release cannot be installed.
+            updater.check(force: true) { version, error in
+                guard let version, version.newest, error == nil else {
+                    if let error { debug("update check failed: \(error.localizedDescription)") }
+                    return
+                }
+                updater.downloadAndInstall(version) { failure in
+                    if let failure {
+                        DispatchQueue.main.async {
+                            showAlert("Could not update Dead Air", failure, .warning)
                         }
                     }
-                })
+                }
             }
         }
         

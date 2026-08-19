@@ -97,6 +97,7 @@ private class UpdateViewController: NSViewController {
 private class UpdateView: NSView {
     private var version: version_s? = nil
     private var path: String = ""
+    private var checksum: String? = nil
     
     override init(frame: NSRect) {
         super.init(frame: CGRect(x: frame.origin.x, y: frame.origin.y, width: frame.width, height: frame.height))
@@ -267,6 +268,14 @@ private class UpdateView: NSView {
         installButton.target = self
         installButton.isHidden = true
         
+        // The checksum the release publishes is resolved first, so the install button is
+        // only ever offered for a download that can be verified.
+        if let checksum = self.version?.checksumURL, let link = URL(string: checksum) {
+            updater.fetchChecksum(link) { value in
+                self.checksum = value
+            }
+        }
+
         updater.download(url, progress: { progress in
             DispatchQueue.main.async {
                 progressBar.doubleValue = progress.fractionCompleted
@@ -299,9 +308,11 @@ private class UpdateView: NSView {
     }
     
     @objc private func install() {
-        updater.install(path: self.path) { error in
+        updater.install(path: self.path, checksum: self.checksum) { error in
             if let error {
-                showAlert("Error update Dead Air", error, .critical)
+                DispatchQueue.main.async {
+                    showAlert("Could not update Dead Air", error, .warning)
+                }
             }
         }
     }

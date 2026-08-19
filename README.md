@@ -85,9 +85,32 @@ Verify what you downloaded before you trust it, the checksum is in the release n
 shasum -a 256 DeadAir-2.0.1-universal.zip
 ```
 
-**Updating is manual for now.** The inherited updater looks for a disk image asset and this
-project ships a zip, so it finds nothing and says nothing. Watch
-[Releases](https://github.com/Nah-Nova/dead-air/releases) instead.
+### Updating
+
+From 2.1 onwards the app updates itself from this repository's releases. It checks GitHub on
+launch and on an interval you set in the settings window, and Silent installs a new version
+without asking while any other setting shows the update window first.
+
+What it verifies before replacing itself, stated plainly because there is no Developer ID
+behind this build:
+
+- The download matches the SHA-256 that the release publishes beside it, so a truncated or
+  altered file is refused.
+- The app inside is this app by bundle identifier, and its version really is higher.
+- The bundle passes its own `codesign --verify`, so it is internally intact.
+
+That is integrity, not authorship. It rests on TLS to GitHub and on the release being
+genuine: a checksum fetched from the same place as the file cannot prove who built the file.
+Proving that needs a signing key whose public half ships inside the app, which this project
+does not have yet. Until it does, a release with no published checksum is refused rather than
+installed on trust.
+
+The app replaces itself in place and never asks for your password. If it cannot write where it
+is installed it says so and leaves the running version alone, so an app in a location that
+needs elevation has to be updated by hand.
+
+Earlier versions cannot update themselves, because the updater they shipped looks for a disk
+image and this project publishes a zip. From 2.0.1 or older, install this one manually once.
 
 ## Permissions
 
@@ -205,9 +228,10 @@ codesign --force --deep -s - "build/DerivedData/Build/Products/Release/Dead Air.
 cp -R "build/DerivedData/Build/Products/Release/Dead Air.app" /Applications/
 ```
 
-The Makefile wraps the same steps, installing to `~/Applications` instead:
-`make build sign install`. Tests run with
-`xcodebuild test -project DeadAir.xcodeproj -scheme "Dead Air" -destination 'platform=macOS'`.
+The Makefile wraps the same steps: `make build sign install` installs to `~/Applications`,
+`make test` runs the suite, and `make package` produces the release zip together with the
+checksum file beside it. Those two are made by one target on purpose, because auto-update
+refuses a release that has no published checksum.
 
 ## Layout
 

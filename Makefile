@@ -5,7 +5,7 @@ SCHEME = Dead Air
 DERIVED_DATA = $(PWD)/build/DerivedData
 APP_PATH = $(DERIVED_DATA)/Build/Products/Release/$(APP_NAME).app
 
-.PHONY: build sign install run clean
+.PHONY: build sign install run test package clean
 
 build:
 	DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
@@ -33,6 +33,26 @@ run:
 	else \
 		open "$(APP_PATH)"; \
 	fi
+
+test:
+	DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
+	xcodebuild test \
+		-project $(PROJECT) \
+		-scheme "$(SCHEME)" \
+		-destination 'platform=macOS' \
+		-derivedDataPath "$(DERIVED_DATA)" \
+		CODE_SIGNING_ALLOWED=NO
+
+# The release artefact, plus the checksum beside it. Auto-update refuses a release with no
+# checksum, so the two are produced together and never separately.
+package: sign
+	@VERSION=$$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$(APP_PATH)/Contents/Info.plist"); \
+	ZIP="$(PWD)/build/DeadAir-$$VERSION-universal.zip"; \
+	rm -f "$$ZIP" "$$ZIP.sha256"; \
+	ditto -c -k --sequesterRsrc --keepParent "$(APP_PATH)" "$$ZIP"; \
+	cd "$(PWD)/build" && shasum -a 256 "DeadAir-$$VERSION-universal.zip" > "DeadAir-$$VERSION-universal.zip.sha256"; \
+	echo "packaged:"; ls -lh "$$ZIP" "$$ZIP.sha256" | awk '{print "  " $$5 "  " $$9}'; \
+	cat "$$ZIP.sha256"
 
 clean:
 	rm -rf "$(PWD)/build"

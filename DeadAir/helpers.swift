@@ -174,14 +174,13 @@ extension AppDelegate {
             }
             
             if silent {
-                if let url = URL(string: version.url) {
-                    updater.download(url, completion: { path in
-                        updater.install(path: path) { error in
-                            if let error {
-                                showAlert("Error update Dead Air", error, .critical)
-                            }
-                        }
-                    })
+                updater.downloadAndInstall(version) { error in
+                    if let error {
+                        // Deliberately silent: this ran without the user asking, and a
+                        // modal raised from here is what used to be able to freeze
+                        // cleaning mode. The next visible check reports it.
+                        debug("silent update did not install: \(error)")
+                    }
                 }
                 return
             }
