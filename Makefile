@@ -45,7 +45,9 @@ test:
 
 # The release artefact, plus the checksum beside it. Auto-update refuses a release with no
 # checksum, so the two are produced together and never separately.
-package: sign
+# Depends on build, not just sign: packaging whatever happened to be in the build
+# directory once produced a zip of the previous version.
+package: build sign
 	@VERSION=$$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$(APP_PATH)/Contents/Info.plist"); \
 	ZIP="$(PWD)/build/DeadAir-$$VERSION-universal.zip"; \
 	rm -f "$$ZIP" "$$ZIP.sha256"; \
