@@ -82,8 +82,12 @@ unnotarised app on current macOS.
 Verify what you downloaded before you trust it, the checksum is in the release notes:
 
 ```sh
-shasum -a 256 "Dead Air-2.0.0-universal.zip"
+shasum -a 256 DeadAir-2.0.0-universal.zip
 ```
+
+**Updating is manual for now.** The inherited updater looks for a disk image asset and this
+project ships a zip, so it finds nothing and says nothing. Watch
+[Releases](https://github.com/Nah-Nova/dead-air/releases) instead.
 
 ## Permissions
 
